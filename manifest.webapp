@@ -1,0 +1,13 @@
+{
+  "name": "Angry Tree",
+  "description": "Save de eggs!",
+  "launch_path": "/angrytree",
+  "icons": {
+    "128": "angrytree/assets/icon-128.png"
+  },
+  "developer": {
+    "name": "MalvaGames",
+    "url": "http://malvagames.co.nz"
+  },
+  "default_locale": "en"
+}
