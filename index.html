@@ -28,6 +28,23 @@
 		src="http://c.statcounter.com/10862165/0/95990bb4/1/"
 		alt="free hit counters"></a></div></noscript>
 		<!-- End of StatCounter Code for Default Guide -->
+		<div id="smaatoad" style="padding: 0px"></div>
+		<script type="text/javascript" src="http://soma-assets.smaato.net/js/smaatoAdTag.js"></script>
+		<script>
+		function callBackForSmaato(status){
+			if(status == "SUCCESS"){
+				console.log('callBack is being called with status : ' + status);
+			} else if (status == "ERROR"){
+				console.log('callBack is being called with status : ' + status);
+			}
+		}; 
+		SomaJS.loadAd({
+			adDivId : "smaatoad",
+			publisherId: 1100019448,
+			adSpaceId: 130089787,
+			dimension: "full_320x480"
+		},callBackForSmaato);
+		</script>
 	</head>
 	<body>
 		<script type="text/javascript">
