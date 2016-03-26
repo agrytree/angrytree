@@ -3,6 +3,8 @@
   "description": "Save de eggs!",
   "launch_path": "/angrytree",
   "icons": {
+    "16": "/angrytree/assets/icon-16.png",
+		"32": "/angrytree/assets/icon-32.png",
     "128": "/angrytree/assets/icon-128.png"
   },
   "developer": {
