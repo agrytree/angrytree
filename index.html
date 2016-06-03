@@ -135,13 +135,7 @@
 
 					ui_play.events.onInputUp.add(function() {
 
-						game.state.start("play");
-
-						if (adCounter >= 3) {
-
-							showAd();
-							adCounter = 0;
-						}
+						showAd();
 						
 					}, this);
 
@@ -353,7 +347,7 @@
 						ui_play.kill();
 						restartGame();
 
-						if (adCounter >= 1) {
+						if (adCounter >= 2) {
 
 							showAd();
 							adCounter = 0;
@@ -439,12 +433,12 @@
 
 			function showScoreboard() {
 
-				window.open("http://sh.st/Pjdvk", "", "width=320,height=320");
+				window.open("http://sh.st/A9TIh", "_self");
 				
 			}
 
 			function showAd() {
-				window.open("http://sh.st/Pjdvk", "", "width=320,height=320");
+				window.open("http://sh.st/A9TIh", "_self");
 			}
 
 
