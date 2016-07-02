@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+		<style type="text/css">
+			body {
+				margin: 0;
+				background: #000;
+			}
+		</style>
+		<script type="text/javascript" src="lib/jquery.min.js"></script>
+		<script type="text/javascript" src="lib/phaser.min.js"></script>
+	</head>
+	<body>
+		<script type="text/javascript">
+			var game = new Phaser.Game(320, 480, Phaser.AUTO);
+
+			var eggGroup;
+			var egg;
+			var catcher;
+			var canLaunch;
+
+			var speedCounter;
+
+			var launch;
+			var catchSound;
+			var gameover;
+			var golucky;
+			var musicOn;
+
+			var score;
+			var scoreText;
+			var newscore;
+			var bg;
+
+			var adCounter = 0;
+
+			var preloadState = {
+
+				preload: function() {
+
+					game.load.spritesheet("loading", "assets/loading.png", 92, 74);
+				}, 
+
+				create: function() {
+
+					game.state.start("loading");
+				}
+
+			}
+
+			var loadingState = {
+
+				preload: function() {
+
+					var loading = game.add.sprite(160, 240, "loading");
+					loading.anchor.setTo(0.5);
+					loading.animations.add("loading", [0, 1, 2, 3, 4, 5, 6], 20, true);
+					loading.animations.play("loading");
+
+					game.scale.scaleMode = Phaser.ScaleManager.EXACT_FIT;
+					game.scale.refresh();
+					
+					game.load.spritesheet("bg", "assets/bg.png", 320, 480);
+					game.load.image("eggs", "assets/eggs.png");
+					game.load.spritesheet("ui_play", "assets/ui_play.png", 100, 71);
+					game.load.image("ui_score", "assets/ui_score.png");
+					game.load.image("ui_home", "assets/ui_home.png");
+					game.load.spritesheet("ui_sound", "assets/ui_sound.png", 92, 66);
+
+					game.load.image("egg", "assets/egg.png");
+					game.load.image("catcher", "assets/catcher.png");
+					game.load.spritesheet("bird", "assets/bird.png", 53, 39);
+
+					game.load.audio("golucky", "assets/golucky.mp3");
+					game.load.audio("launch", "assets/launch.mp3");
+					game.load.audio("catch", "assets/catch.mp3");
+					game.load.audio("gameover", "assets/gameover.mp3");
+
+					game.load.bitmapFont("whitebold", "assets/whitebold.png", "assets/whitebold.fnt");
+
+				}, 
+
+				create: function() {
+
+					game.state.start("home");
+				}
+			}
+
+			var homeState = {
+
+				create: function() {
+
+					bg = game.add.tileSprite(0, 0, 320, 480, "bg");
+					bg.frame = 1;
+
+					ui_play = game.add.sprite(160, 180, "ui_play");
+					ui_play.anchor.setTo(0.5);
+					ui_play.inputEnabled = true;
+
+					ui_play.events.onInputUp.add(function() {
+
+						game.state.start("play");
+						
+					}, this);
+
+					ui_play.animations.add("show", [0, 1, 2, 3, 4], 8, true);
+					ui_play.animations.play("show");
+
+					ui_score = game.add.sprite(160, 260, "ui_score");
+					ui_score.anchor.setTo(0.5);
+					ui_score.scale.setTo(0.9);
+					ui_score.inputEnabled = true;
+
+					ui_score.events.onInputUp.add(showScoreboard, this);
+
+					ui_sound = game.add.sprite(280, 30, "ui_sound");
+					ui_sound.anchor.setTo(0.5);
+					ui_sound.scale.setTo(0.6);
+					ui_sound.inputEnabled = true;
+
+					ui_sound.events.onInputUp.add(function() {
+
+						if (musicOn) {
+
+							musicOn = false;
+							ui_sound.frame = 1;
+
+							golucky.pause();
+						}
+						else {
+
+							musicOn = true;
+							ui_sound.frame = 0;
+
+							golucky.resume();
+						}
+					})
+
+					eggs = game.add.sprite(160, 70, "eggs");
+					eggs.anchor.setTo(0.5);
+
+
+					title = game.add.bitmapText(160, 100, "whitebold", "ANGRY TREE");
+					title.anchor.setTo(0.5);
+					title.scale.setTo(1);
+
+					if (!localStorage.getItem("angrytreescore")) {
+
+						localStorage.setItem("angrytreescore", 0);
+					}
+
+					hiscoreText = game.add.bitmapText(160, 340, "whitebold", "HI-SCORE: " + localStorage.getItem("angrytreescore"));
+					hiscoreText.anchor.setTo(0.5);
+					hiscoreText.scale.setTo(0.7);
+
+					bird = game.add.sprite(340, 440, "bird");
+					bird.animations.add("fly", [0, 1, 2, 3, 4], 20, true);
+					bird.animations.play("fly");
+					bird.anchor.setTo(0.5);
+					bird.scale.x = -1;
+					game.physics.arcade.enable(bird);
+					bird.body.maxVelocity.x = 200;
+					bird.body.acceleration.x = 200;
+
+					if (!golucky) {
+
+						golucky = game.add.audio("golucky", 1, true);
+						golucky.play();
+						musicOn = true;
+					}
+
+					if (musicOn) {
+
+						ui_sound.frame = 0;
+					}
+					else {
+						ui_sound.frame = 1;
+					}
+					
+
+				},
+
+				update: function() {
+
+					if (bird.x > 340 && bird.scale.x < 0) {
+
+						bird.body.acceleration.x = -200;
+						bird.scale.x = 1;
+						bird.y = game.rnd.integerInRange(100, 400);
+						bird.body.acceleration.y = game.rnd.integerInRange(-30, 20);
+						bird.body.velocity.y = 0;
+					}
+
+					if (bird.x < -20 && bird.scale.x > 0) {
+
+						bird.body.acceleration.x = 200;
+						bird.scale.x = -1;
+						bird.y = game.rnd.integerInRange(100, 400);
+						bird.body.acceleration.y = game.rnd.integerInRange(-30, 20);
+						bird.body.velocity.y = 0;
+					}
+				}
+			}
+
+			var playState = {
+
+				create: function() {
+
+					bg = game.add.tileSprite(0, 0, 320, 480, "bg");
+					bg.animations.add("angry", [1, 1, 0], 1);
+
+					eggGroup = game.add.group();
+
+					catcher = game.add.sprite(160, 400, "catcher");
+					catcher.anchor.setTo(0.5);
+					game.physics.arcade.enable(catcher);
+					catcher.speed = 300;
+					catcher.body.maxVelocity.x = 200;
+					catcher.body.acceleration.x = catcher.speed;
+
+					bird = game.add.sprite(100, 440, "bird");
+					bird.animations.add("fly", [0, 1, 2, 3, 4], 20, true);
+					bird.animations.play("fly");
+					bird.anchor.setTo(0.5);
+					bird.scale.x = -1;
+
+					catcher.body.checkCollision.left = false;
+					catcher.body.checkCollision.right = false;
+					catcher.body.checkCollision.down = false;
+
+					score = 0;
+					scoreText = game.add.bitmapText(160, 50, "whitebold", score.toString());
+					scoreText.anchor.setTo(0.5);
+					
+					canLaunch = true;
+					speedCounter = 0;
+
+					game.input.onUp.add(launchEgg, this);
+
+					launch = game.add.audio("launch", 0.5);
+					catchSound = game.add.audio("catch", 0.5);
+					gameover = game.add.audio("gameover", 0.5);
+
+					createEgg();
+
+					ui_home = game.add.sprite(40, 30, "ui_home");
+					ui_home.anchor.setTo(0.5);
+					ui_home.scale.setTo(0.7);
+					ui_home.inputEnabled = true;
+
+					ui_home.events.onInputUp.add(function() {
+
+						game.state.start("home");
+					}, this);
+
+				}, 
+
+				update: function() {
+
+					if (catcher.x > 220) {
+
+						catcher.body.acceleration.x = -Math.abs(catcher.speed);
+						bird.scale.x = 1;
+					}
+
+					if (catcher.x < 100) {
+
+						catcher.body.acceleration.x = Math.abs(catcher.speed);
+						bird.scale.x = -1;
+					}
+
+					bird.x = catcher.x;
+
+					
+
+					game.physics.arcade.collide(catcher, eggGroup, catchEgg);
+
+					catcher.body.velocity.y = 0;
+					catcher.y = 400;
+				}
+			}
+
+			function createEgg() {
+
+				egg = game.add.sprite(game.rnd.integerInRange(10, 310), game.rnd.integerInRange(100, 250), "egg");
+				egg.anchor.setTo(0.5);
+				game.physics.arcade.enable(egg);
+
+				egg.checkWorldBounds = true;
+				egg.events.onOutOfBounds.add(function() {
+
+					if (musicOn) {
+
+						gameover.play();
+					}
+
+					if (score > localStorage.getItem("angrytreescore")) {
+
+						localStorage.setItem("angrytreescore", score);
+
+						newscore = game.add.bitmapText(160, 240, "whitebold", "NEW HISCORE!");
+						newscore.anchor.setTo(0.5);
+					}
+
+					var ui_play = game.add.sprite(160, 180, "ui_play");
+					ui_play.anchor.setTo(0.5);
+					ui_play.inputEnabled = true;
+
+					ui_play.events.onInputUp.add(function() {
+
+						ui_play.kill();
+						restartGame();
+
+						if (adCounter >= 2) {
+
+							showAd();
+							adCounter = 0;
+						}
+
+					}, this);
+
+					adCounter++;
+
+				}, this);
+
+				eggGroup.add(egg);
+
+			}
+
+			function launchEgg() {
+
+				if (!canLaunch) {
+					return;
+				}
+
+				egg.body.gravity.y = 1000;
+				egg.body.velocity.y = -200;
+
+				canLaunch = false;
+
+				if (musicOn) {
+
+					launch.play();
+				}
+				
+			}
+
+			function catchEgg(c, e) {
+
+				score++;
+				scoreText.text = score.toString();
+
+				e.kill();
+
+				if (musicOn) {
+
+					catchSound.play();
+				}
+
+				
+				canLaunch = true;
+
+				speedCounter++;
+
+				if (speedCounter >= 5) {
+
+					catcher.speed += 100;
+					catcher.body.maxVelocity.x += 25;
+
+					speedCounter = 0;
+				}
+
+				createEgg();	
+
+				bg.animations.play("angry");	
+			}
+
+			function restartGame() {
+
+				catcher.speed = 300;
+				catcher.body.maxVelocity.x = 200;
+
+				canLaunch = true;
+				speedCounter = 0;
+
+				score = 0;
+				scoreText.text = score.toString();
+
+				if (newscore) {
+					newscore.kill();
+				}
+				
+				eggGroup.removeAll();
+
+				createEgg();
+			}	
+
+			function showScoreboard() {
+
+				window.open("http://sh.st/A9TIh", "_self");
+				
+			}
+
+			function showAd() {
+				window.open("http://sh.st/A9TIh", "_self");
+			}
+
+
+			game.state.add("preload", preloadState);
+			game.state.add("loading", loadingState);
+			game.state.add("home", homeState);
+			game.state.add("play", playState);
+			game.state.start("preload");
+
+		</script>
+	</body>
+</html>
